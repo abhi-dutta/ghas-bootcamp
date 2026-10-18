@@ -40,6 +40,13 @@ public class BlobController {
     @Value("${blob.allowed-content-types}")
     private String[] allowedContentTypes;
 
+    private String sanitizePathComponent(String component) {
+        if (component == null || component.contains("..") || component.contains("/") || component.contains("\\")) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid path component");
+        }
+        return component;
+    }
+
     private Blob deserializeBlob(InputStream inputStream) throws IOException, ClassNotFoundException{
         ObjectInputStream in = new ObjectInputStream(inputStream);
         Blob b = (Blob)in.readObject();
@@ -51,8 +58,9 @@ public class BlobController {
     public Blob get(@PathVariable UUID id, JwtAuthenticationToken token) {
         Profile profile = (Profile)token.getPrincipal();
         try {
+            String safeName = sanitizePathComponent(profile.name);
             Blob blob = null;
-            Resource resource = this.resourceLoader.getResource(String.format("s3://%s/%s/%s", bucket, profile.name, id.toString()));
+            Resource resource = this.resourceLoader.getResource(String.format("s3://%s/%s/%s", bucket, safeName, id.toString()));
             InputStream inputStream = resource.getInputStream();
             blob = deserializeBlob(inputStream);
             inputStream.close();
@@ -67,6 +75,7 @@ public class BlobController {
     @PostMapping("/blob")
     public UUID post(@RequestParam MultipartFile file, @RequestParam(defaultValue="false") boolean isBlob, JwtAuthenticationToken token) {
         Profile profile = (Profile)token.getPrincipal();
+        String safeName = sanitizePathComponent(profile.name);
         try {
             UUID id = UUID.randomUUID();
             Blob blob = null;
@@ -80,7 +89,7 @@ public class BlobController {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Disallowed content type");
             }
             
-            Resource resource = this.resourceLoader.getResource(String.format("s3://%s/%s/%s", bucket, profile.name, id.toString()));
+            Resource resource = this.resourceLoader.getResource(String.format("s3://%s/%s/%s", bucket, safeName, id.toString()));
             WritableResource writableResource = (WritableResource) resource;
             OutputStream outputStream = writableResource.getOutputStream();
             ObjectOutputStream out = new ObjectOutputStream(outputStream);
