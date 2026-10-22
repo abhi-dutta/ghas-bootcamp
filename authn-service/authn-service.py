@@ -30,7 +30,7 @@ def get_access_token(code):
         'state': 'NotSoRandom'
     }, headers={
         'Accept': 'application/json'
-    })
+    }, timeout=10)
 
     app.logger.debug('Received response %s with status %d', r.json(), r.status_code)
     data = r.json()
@@ -45,7 +45,7 @@ def get_user_profile(access_token):
     r = requests.get('https://api.github.com/user', headers={
         'Accept': 'application/vnd.github.v3+json',
         'Authorization': f'Bearer {access_token}'
-    })
+    }, timeout=10)
 
     app.logger.debug('Received response %s with status %d', r.json(), r.status_code)
     data = r.json()
