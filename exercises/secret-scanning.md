@@ -28,7 +28,7 @@ When developing test cases it might be the case that secrets are introduced that
 1. In the GitHub repository file explorer create a test file that will contain a test secret.
     - For example the file `storage-service/src/main/resources/application.dev.properties` with the secrets
         ```
-        AWS_ACCESS_KEY_ID="AKIAZBQE345LKPTEAHQD"
+        AWS_ACCESS_KEY_ID="AKIAIOSFODNN7EXAMPLE" # placeholder — not a real credential
         AWS_SECRET_ACCESS_KEY="your-test-secret-access-key-here"
         ```
 2. Determine if the secret is detected when the file is stored.
