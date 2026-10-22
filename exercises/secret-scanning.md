@@ -28,9 +28,10 @@ When developing test cases it might be the case that secrets are introduced that
 1. In the GitHub repository file explorer create a test file that will contain a test secret.
     - For example the file `storage-service/src/main/resources/application.dev.properties` with the secrets
         ```
-        AWS_ACCESS_KEY_ID="AKIAZBQE345LKPTEAHQD"
-        AWS_SECRET_ACCESS_KEY="wt6lVzza0QFx/U33PU8DrkMbnKiu+bv9jheR0h/D"
+        AWS_ACCESS_KEY_ID="CHANGE_ME"
+        AWS_SECRET_ACCESS_KEY="CHANGE_ME"
         ```
+        <!-- ROTATE: the previous AWS credentials in this example are compromised via git history and must be revoked in the AWS IAM console -->
 2. Determine if the secret is detected when the file is stored.
 3. How would you like to manage results from test files?
 
@@ -62,7 +63,7 @@ While we can close a detected secret as being used in a test, we can also config
 
     For example change the `secretKey` to
     ```
-    AWS_SECRET_ACCESS_KEY="6L=yQr6Ivxxj/XG+YdFPdH/xWDcbSV9ch/EjmHCL"
+    AWS_SECRET_ACCESS_KEY="CHANGE_ME"
     ```
 
 #### Custom patterns for secret scanning
