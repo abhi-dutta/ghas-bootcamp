@@ -40,6 +40,18 @@ public class BlobController {
     @Value("${blob.allowed-content-types}")
     private String[] allowedContentTypes;
 
+    /**
+     * Validates that a path component does not contain path traversal sequences
+     * or directory separators that could allow access to unintended S3 keys.
+     */
+    private String validatePathComponent(String component) {
+        if (component == null || component.contains("..") || component.contains("/")
+                || component.contains("\\") || component.contains("\0")) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid path component");
+        }
+        return component;
+    }
+
     private Blob deserializeBlob(InputStream inputStream) throws IOException, ClassNotFoundException{
         ObjectInputStream in = new ObjectInputStream(inputStream);
         Blob b = (Blob)in.readObject();
@@ -50,9 +62,10 @@ public class BlobController {
     @GetMapping("/blob/{id}")
     public Blob get(@PathVariable UUID id, JwtAuthenticationToken token) {
         Profile profile = (Profile)token.getPrincipal();
+        String safeName = validatePathComponent(profile.name);
         try {
             Blob blob = null;
-            Resource resource = this.resourceLoader.getResource(String.format("s3://%s/%s/%s", bucket, profile.name, id.toString()));
+            Resource resource = this.resourceLoader.getResource(String.format("s3://%s/%s/%s", bucket, safeName, id.toString()));
             InputStream inputStream = resource.getInputStream();
             blob = deserializeBlob(inputStream);
             inputStream.close();
@@ -67,6 +80,7 @@ public class BlobController {
     @PostMapping("/blob")
     public UUID post(@RequestParam MultipartFile file, @RequestParam(defaultValue="false") boolean isBlob, JwtAuthenticationToken token) {
         Profile profile = (Profile)token.getPrincipal();
+        String safeName = validatePathComponent(profile.name);
         try {
             UUID id = UUID.randomUUID();
             Blob blob = null;
@@ -80,7 +94,7 @@ public class BlobController {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Disallowed content type");
             }
             
-            Resource resource = this.resourceLoader.getResource(String.format("s3://%s/%s/%s", bucket, profile.name, id.toString()));
+            Resource resource = this.resourceLoader.getResource(String.format("s3://%s/%s/%s", bucket, safeName, id.toString()));
             WritableResource writableResource = (WritableResource) resource;
             OutputStream outputStream = writableResource.getOutputStream();
             ObjectOutputStream out = new ObjectOutputStream(outputStream);
