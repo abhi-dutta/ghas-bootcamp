@@ -3,6 +3,7 @@ package com.github.advancedsecurity.storageservice.controllers;
 import java.util.UUID;
 import java.util.Arrays;
 import java.io.InputStream;
+import java.io.ObjectInputFilter;
 import java.io.ObjectInputStream;
 import java.io.OutputStream;
 import java.io.ObjectOutputStream;
@@ -52,9 +53,32 @@ public class BlobController {
         return component;
     }
 
-    private Blob deserializeBlob(InputStream inputStream) throws IOException, ClassNotFoundException{
+    /**
+     * Allowlist filter for ObjectInputStream: only permit Blob, String,
+     * and standard JDK array/number types needed for deserialization.
+     * All other classes are rejected to prevent deserialization attacks.
+     */
+    private static final ObjectInputFilter BLOB_DESERIALIZATION_FILTER = filterInfo -> {
+        Class<?> clazz = filterInfo.serialClass();
+        if (clazz == null) {
+            // Not a class-check event (depth/array-length/etc.) — allow
+            return ObjectInputFilter.Status.ALLOWED;
+        }
+        if (clazz == Blob.class
+                || clazz == String.class
+                || clazz == Number.class
+                || clazz == Long.class
+                || clazz == Integer.class
+                || clazz == byte[].class) {
+            return ObjectInputFilter.Status.ALLOWED;
+        }
+        return ObjectInputFilter.Status.REJECTED;
+    };
+
+    private Blob deserializeBlob(InputStream inputStream) throws IOException, ClassNotFoundException {
         ObjectInputStream in = new ObjectInputStream(inputStream);
-        Blob b = (Blob)in.readObject();
+        in.setObjectInputFilter(BLOB_DESERIALIZATION_FILTER);
+        Blob b = (Blob) in.readObject();
         in.close();
         return b;
     }
