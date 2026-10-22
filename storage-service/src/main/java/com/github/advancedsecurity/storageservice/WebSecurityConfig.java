@@ -9,6 +9,7 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.annotation.web.configurers.CsrfConfigurer;
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -44,7 +45,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 		BearerAuthenticationFilter filter = new BearerAuthenticationFilter(authenticationManager(), this.antPattern);
 		filter.setAuthenticationSuccessHandler(jwtAuthenticationSuccessHandler);
 		http.cors().and()
-			 .csrf().disable()
+			 .csrf().csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse()).and()
 			 .authorizeRequests().antMatchers(this.antPattern).authenticated().and()
 			 .addFilterBefore(filter, UsernamePasswordAuthenticationFilter.class)
 			 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
