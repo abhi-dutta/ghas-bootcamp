@@ -16,6 +16,9 @@ CORS(app)
 
 CLIENT_ID = os.getenv("CLIENT_ID")
 CLIENT_SECRET = os.getenv("CLIENT_SECRET")
+JWT_SECRET = os.getenv("JWT_SECRET")
+if not JWT_SECRET:
+    raise RuntimeError("JWT_SECRET environment variable is required")
 
 def get_access_token(code):
     app.logger.debug('Requesting access token')
@@ -27,7 +30,7 @@ def get_access_token(code):
         'state': 'NotSoRandom'
     }, headers={
         'Accept': 'application/json'
-    })
+    }, timeout=10)
 
     app.logger.debug('Received response %s with status %d', r.json(), r.status_code)
     data = r.json()
@@ -42,7 +45,7 @@ def get_user_profile(access_token):
     r = requests.get('https://api.github.com/user', headers={
         'Accept': 'application/vnd.github.v3+json',
         'Authorization': f'Bearer {access_token}'
-    })
+    }, timeout=10)
 
     app.logger.debug('Received response %s with status %d', r.json(), r.status_code)
     data = r.json()
@@ -72,6 +75,6 @@ def authenticate(code):
     }
     app.logger.debug("Created claimset: %s", claimset)
 
-    token = jwt.encode(claimset, 'secretsecret1234secretsecret1234', algorithm='HS256')
+    token = jwt.encode(claimset, JWT_SECRET, algorithm='HS256')
 
     return {'token': token.decode()}

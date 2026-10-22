@@ -707,5 +707,12 @@ func main() {
 
 	addr := fmt.Sprintf("%s:%d", configuration.Host, configuration.Port)
 	log.Printf("Listening on %s", addr)
-	log.Fatal(http.ListenAndServe(addr, router))
+	certFile := os.Getenv("TLS_CERT_FILE")
+	keyFile := os.Getenv("TLS_KEY_FILE")
+	if certFile != "" && keyFile != "" {
+		log.Fatal(http.ListenAndServeTLS(addr, certFile, keyFile, router))
+	} else {
+		log.Println("WARNING: TLS_CERT_FILE and TLS_KEY_FILE not set, falling back to plaintext HTTP")
+		log.Fatal(http.ListenAndServe(addr, router))
+	}
 }
