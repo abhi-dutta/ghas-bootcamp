@@ -17,6 +17,9 @@ CORS(app)
 CLIENT_ID = os.getenv("CLIENT_ID")
 CLIENT_SECRET = os.getenv("CLIENT_SECRET")
 
+# (connect, read) timeout in seconds for outbound GitHub requests
+REQUEST_TIMEOUT = (5, 10)
+
 def get_access_token(code):
     app.logger.debug('Requesting access token')
     r = requests.post('https://github.com/login/oauth/access_token', json={
@@ -27,7 +30,7 @@ def get_access_token(code):
         'state': 'NotSoRandom'
     }, headers={
         'Accept': 'application/json'
-    })
+    }, timeout=REQUEST_TIMEOUT)
 
     app.logger.debug('Received response %s with status %d', r.json(), r.status_code)
     data = r.json()
@@ -42,7 +45,7 @@ def get_user_profile(access_token):
     r = requests.get('https://api.github.com/user', headers={
         'Accept': 'application/vnd.github.v3+json',
         'Authorization': f'Bearer {access_token}'
-    })
+    }, timeout=REQUEST_TIMEOUT)
 
     app.logger.debug('Received response %s with status %d', r.json(), r.status_code)
     data = r.json()
